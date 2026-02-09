@@ -20,9 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Ensure necessary directories exist
-RUN mkdir -p data logs
-
 # Install package in editable mode to ensure metadata is correct
 RUN pip install -e .
 
