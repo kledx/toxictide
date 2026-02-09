@@ -8,7 +8,8 @@ __pycache__
 venv
 .env
 logs/
-data/
+data/*
+!data/.gitkeep
 *.egg-info/
 dist/
 build/
