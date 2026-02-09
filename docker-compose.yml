@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  toxictide:
+    container_name: toxictide
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      # Persist Logs
+      - ./logs:/app/logs
+      # Persist Paper Account State
+      - ./paper_account.json:/app/paper_account.json
+      # Mount .env if you want to manage it as a file on host, 
+      # OR rely on Dokploy env var injection (recommended).
+      # If using Dokploy, env vars are usually injected directly.
+      # We'll leave .env mount commented out as default usage in Dokploy often uses env vars.
+      # - ./.env:/app/.env
+    environment:
+      # Pass-through environment variables from Dokploy/Host
+      # If you set these in Dokploy, they will be injected here.
+      - BINANCE_SYMBOL=${BINANCE_SYMBOL:-ETHUSDT}
+      - BINANCE_USE_TESTNET=${BINANCE_USE_TESTNET:-false}
+      - WEB_UI_PORT=${WEB_UI_PORT:-8001}
+
+      # Secrets (No default value, passed from Dokploy)
+      - BINANCE_API_KEY
+      - BINANCE_API_SECRET
+      - BINANCE_TESTNET_API_KEY
+      - BINANCE_TESTNET_API_SECRET
+    network_mode: bridge

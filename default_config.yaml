@@ -1,0 +1,36 @@
+environment: dev
+
+market:
+  symbols: ["ETH-PERP"]
+  orderbook_depth: 20
+  tape_window_sec: 300
+
+features:
+  impact_size_quote_usd: 1000
+  rolling_window_short_sec: 300
+  rolling_window_long_sec: 3600
+
+oad:
+  z_warn: 4.0
+  z_danger: 6.0
+
+vad:
+  z_warn: 4.0
+  z_danger: 6.0
+  toxic_warn: 0.6
+  toxic_danger: 0.75
+
+risk:
+  max_daily_loss_pct: 1.0
+  max_leverage: 2.0
+  max_position_notional: 3000
+  impact_entry_cap_bps: 10.0
+  impact_hard_cap_bps: 20.0
+
+execution:
+  mode: paper  # paper | real
+  slicing_threshold_bps: 10.0
+
+logging:
+  level: INFO
+  format: json

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToxicTide // 毒</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#fdfbf7', // Rice Paper
+                        ink: '#1c1c1c',   // Ink Stick
+                        cinnabar: '#c0392b', // Vermilion
+                        bamboo: '#2d6a4f',   // Muted Green
+                        bronze: '#b08d55',   // Bronze
+                        mist: '#e5e7eb'
+                    },
+                    fontFamily: {
+                        serif: ['"Noto Serif SC"', 'SimSun', 'STSong', 'serif'],
+                        mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
+                    },
+                    boxShadow: {
+                        'ink': '0 4px 20px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #fdfbf7;
+            color: #1c1c1c;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d1d5db' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        .ink-border {
+            border: 1px solid rgba(28, 28, 28, 0.1);
+        }
+
+        /* Calligraphy Brush Stroke Effect for Headers */
+        .brush-stroke {
+            position: relative;
+            display: inline-block;
+        }
+
+        .brush-stroke::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 10px;
+            background-color: rgba(192, 57, 43, 0.1);
+            z-index: -1;
+            transform: skewX(-10deg);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .circle-node {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .breathe {
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        /* Custom Scrollbar - Minimal */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen overflow-hidden flex flex-col font-serif selection:bg-cinnabar selection:text-white">
+
+    <!-- Navbar -->
+    <header
+        class="h-20 flex items-center justify-between px-10 bg-paper/90 backdrop-blur-sm border-b border-black/5 z-50">
+        <div class="flex items-center gap-6">
+            <div class="w-10 h-10 border-2 border-ink rounded-full flex items-center justify-center">
+                <span class="text-xl font-bold">毒</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-widest text-ink">TOXICTIDE</h1>
+                <div class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-0.5">Automated Trading System</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-8">
+            <div class="text-right">
+                <div class="text-[10px] text-gray-400 uppercase tracking-widest">Status</div>
+                <div class="flex items-center gap-2 justify-end">
+                    <span class="w-1.5 h-1.5 rounded-full bg-bamboo animate-pulse"></span>
+                    <span class="text-xs font-bold text-bamboo">RUNNING</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-[10px] text-gray-400 uppercase tracking-widest">Time</div>
+                <div class="text-xs font-mono text-gray-600" id="sys-time">00:00:00</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-10 grid grid-cols-12 gap-10 overflow-hidden">
+
+        <!-- Left: Market Overview (3 Col) -->
+        <aside class="col-span-3 flex flex-col gap-4 h-full min-h-0 overflow-y-auto scrollbar-hide pb-4">
+            <!-- Price Display -->
+            <div class="card p-8 rounded-sm relative overflow-hidden shrink-0">
+                <div class="absolute top-0 left-0 w-1 h-full bg-ink"></div>
+                <h2 class="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">Market Price</h2>
+                <div class="text-4xl font-mono text-ink font-light tracking-tighter" id="market-price">--.--</div>
+                <div class="mt-4 flex items-center gap-3">
+                    <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 font-mono rounded">ETH/USDT.P</span>
+                    <span class="text-xs text-bamboo font-mono" id="market-change">Active</span>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 shrink-0">
+                <div class="card p-6 rounded-sm text-center">
+                    <div class="text-[10px] text-gray-400 uppercase mb-2 cursor-help border-b border-dotted border-gray-300 inline-block"
+                        title="买一价与卖一价的差值 (Basis Points)。
+值越小 = 流动性越好
+值越大 = 市场深度差或恐慌">Spread [?]</div>
+                    <div class="text-xl font-mono text-ink" id="market-spread">0.00</div>
+                    <div class="text-[10px] text-gray-400 mt-1">bps</div>
+                </div>
+                <div class="card p-6 rounded-sm text-center">
+                    <div class="text-[10px] text-gray-400 uppercase mb-2">Risk Level</div>
+                    <div class="text-xl font-serif text-ink" id="risk-level">Low</div>
+                </div>
+            </div>
+
+            <!-- Detectors -->
+            <div class="card p-5 rounded-sm shrink-0 flex flex-col">
+                <h2 class="text-xs text-gray-400 uppercase tracking-[0.2em] mb-6 border-b border-black/5 pb-2">Anomaly
+                    Detectors</h2>
+
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-xs mb-2">
+                            <span class="font-serif text-gray-600"
+                                title="Orderbook Anomaly Detector: 检测挂单簿的异常撤单和深度枯竭">Orderbook Stress (OAD)</span>
+                            <span class="font-mono text-cinnabar" id="oad-val">0.0</span>
+                        </div>
+                        <div class="w-full bg-mist h-1 rounded-full overflow-hidden">
+                            <div id="oad-bar" class="bg-ink h-full w-0 transition-all duration-500"></div>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-1 hidden" id="oad-reason">Liquidity Gap Detected</div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-2">
+                            <span class="font-serif text-gray-600" title="Volume Anomaly Detector: 检测异常成交量和毒性订单流">Volume
+                                Stress (VAD)</span>
+                            <span class="font-mono" id="vad-val">0.0</span>
+                        </div>
+                        <div class="w-full bg-mist h-1 rounded-full overflow-hidden">
+                            <div id="vad-bar" class="bg-ink h-full w-0 transition-all duration-500"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stress Index -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-2">
+                            <span class="font-serif text-gray-600 cursor-help border-b border-dotted border-gray-400"
+                                title="系统综合压力总值 (0-10+)。融合了 OAD 和 VAD 分数。
+> 6.0 = 剧毒市场 (Toxic)，系统将进入防御模式，停止一切开仓。">Total System Stress [?]</span>
+                            <span class="font-mono" id="stress-val">0.0</span>
+                        </div>
+                        <div class="w-full bg-mist h-1.5 rounded-full overflow-hidden">
+                            <div id="stress-bar" class="bg-ink h-full w-0 transition-all duration-500"></div>
+                        </div>
+                        <div class="mt-2 text-[10px] text-cinnabar hidden" id="stress-warning">
+                            <span class="w-1.5 h-1.5 inline-block rounded-full bg-cinnabar mr-1 animate-pulse"></span>
+                            MARKET TOXIC: TRADING HALTED
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6">
+                    <div class="flex items-center justify-between p-3 bg-paper border border-ink/10 rounded">
+                        <span class="text-xs text-gray-500">Regime State</span>
+                        <div class="flex flex-col text-right">
+                            <span class="text-xs font-bold text-ink" id="regime-state">RANGE / CALM</span>
+                            <span class="text-[10px] text-gray-400 font-mono" id="regime-details">Normal
+                                Operation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Overview -->
+            <div class="card p-5 rounded-sm flex flex-col shrink-0">
+                <h2 class="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4 border-b border-black/5 pb-2">Account
+                    Overview</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-[10px] text-gray-400 uppercase mb-1">Total Balance</div>
+                        <div class="text-xl font-mono text-ink" id="account-balance">--.--</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">USD</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-gray-400 uppercase mb-1">Unrealized PnL</div>
+                        <div class="text-xl font-mono text-gray-400" id="account-pnl">--.--</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">USD</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Positions -->
+            <div class="card p-5 rounded-sm min-h-[300px] flex flex-col">
+                <h2 class="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4 border-b border-black/5 pb-2">Active
+                    Positions</h2>
+                <div class="overflow-y-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[10px] text-gray-400 border-b border-gray-100">
+                                <th class="pb-2 font-normal">Side</th>
+                                <th class="pb-2 font-normal">Size</th>
+                                <th class="pb-2 font-normal">Entry</th>
+                                <th class="pb-2 font-normal text-right">PnL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-body" class="text-xs font-mono">
+                            <!-- Rows will be injected here -->
+                            <tr class="text-gray-300 italic text-center">
+                                <td colspan="4" class="py-4">No active positions</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center: Flow (6 Col) -->
+        <section class="col-span-6 flex flex-col items-center justify-center relative">
+
+            <!-- Central Diagram -->
+            <div class="relative w-full max-w-lg aspect-square flex items-center justify-center">
+
+                <!-- Background Circles -->
+                <div class="absolute inset-0 border border-black/5 rounded-full animate-[spin_60s_linear_infinite]">
+                </div>
+                <div
+                    class="absolute inset-10 border border-black/5 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]">
+                </div>
+
+                <!-- Center: Guardian -->
+                <div id="node-risk"
+                    class="circle-node w-32 h-32 bg-white border-2 border-ink rounded-full flex flex-col items-center justify-center z-10 shadow-ink">
+                    <span class="text-2xl mb-1">🛡️</span>
+                    <span class="text-xs font-bold tracking-widest">GUARDIAN</span>
+                    <span class="text-[10px] text-gray-400 mt-1 font-mono" id="risk-status">IDLE</span>
+                </div>
+
+                <!-- Satellites -->
+
+                <!-- Signal (Top) -->
+                <div id="node-signal"
+                    class="circle-node absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 bg-white border border-gray-200 rounded-full flex flex-col items-center justify-center shadow-sm">
+                    <span class="text-xs text-gray-400 mb-1">Signal</span>
+                    <span class="text-lg">📡</span>
+                </div>
+
+                <!-- Exec (Bottom) -->
+                <div id="node-exec"
+                    class="circle-node absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-24 bg-white border border-gray-200 rounded-full flex flex-col items-center justify-center shadow-sm">
+                    <span class="text-xs text-gray-400 mb-1">Exec</span>
+                    <span class="text-lg">⚡</span>
+                    <div id="fills-count" class="text-[10px] font-mono mt-1 text-gray-500">0</div>
+                </div>
+
+                <!-- Lines -->
+                <div class="absolute top-24 left-1/2 w-px h-16 bg-gray-200 -translate-x-1/2"></div>
+                <div class="absolute bottom-24 left-1/2 w-px h-16 bg-gray-200 -translate-x-1/2"></div>
+
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-400 font-serif italic">" Stillness in motion. "</p>
+            </div>
+        </section>
+
+        <!-- Right: Log Scroll (3 Col) -->
+        <aside class="col-span-3 flex flex-col h-full overflow-hidden">
+            <div class="h-full border-l border-black/5 pl-8 flex flex-col relative">
+                <div class="absolute top-0 left-8 w-px h-full bg-gray-200"></div>
+
+                <h2 class="text-xs text-gray-400 uppercase tracking-[0.2em] mb-6 pl-4 bg-paper z-10 w-max">System
+                    Journal</h2>
+
+                <div class="flex-1 overflow-y-auto space-y-6 pr-2 pb-10 scrollbar-hide" id="log-container">
+                    <!-- Log Item Template -->
+                    <div class="relative pl-6 opacity-50">
+                        <div
+                            class="absolute left-[-5px] top-1.5 w-2.5 h-2.5 bg-gray-200 rounded-full border-2 border-paper">
+                        </div>
+                        <div class="text-[10px] text-gray-400 font-mono mb-0.5">10:42:01</div>
+                        <div class="text-sm text-gray-600">System initialized.</div>
+                    </div>
+                </div>
+
+                <!-- Fade out bottom -->
+                <div
+                    class="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-paper to-transparent pointer-events-none">
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // --- WebSocket ---
+        const wsUrl = `ws://${window.location.host}/ws`;
+        let ws;
+        const logContainer = document.getElementById('log-container');
+        const maxLogs = 50;
+
+        function connect() {
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                log('SYS', 'Link Established', 'neutral');
+            };
+
+            ws.onclose = () => {
+                setTimeout(connect, 3000);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    processMessage(msg);
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+        }
+
+        connect();
+
+        // --- UI Logic ---
+        const els = {
+            price: document.getElementById('market-price'),
+            spread: document.getElementById('market-spread'),
+            oadVal: document.getElementById('oad-val'),
+            oadBar: document.getElementById('oad-bar'),
+            oadReason: document.getElementById('oad-reason'),
+            vadVal: document.getElementById('vad-val'),
+            vadBar: document.getElementById('vad-bar'),
+            stressVal: document.getElementById('stress-val'),
+            stressBar: document.getElementById('stress-bar'),
+            stressWarn: document.getElementById('stress-warning'),
+            regime: document.getElementById('regime-state'),
+            regimeDetails: document.getElementById('regime-details'),
+            riskStatus: document.getElementById('risk-status'),
+            riskNode: document.getElementById('node-risk'),
+            signalNode: document.getElementById('node-signal'),
+            execNode: document.getElementById('node-exec'),
+            fills: document.getElementById('fills-count'),
+            accountBalance: document.getElementById('account-balance'),
+            accountPnl: document.getElementById('account-pnl')
+        };
+
+        // Time
+        setInterval(() => {
+            document.getElementById('sys-time').innerText = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        }, 1000);
+
+        function log(topic, text, type = 'neutral') {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            let dotColor = 'bg-gray-200';
+            let textColor = 'text-gray-600';
+
+            if (type === 'good') { dotColor = 'bg-bamboo'; textColor = 'text-gray-800 font-medium'; }
+            if (type === 'bad') { dotColor = 'bg-cinnabar'; textColor = 'text-cinnabar'; }
+            if (type === 'warn') { dotColor = 'bg-bronze'; textColor = 'text-gray-800'; }
+
+            div.className = `relative pl-6 animate-[fadeIn_0.5s_ease-out]`;
+            div.innerHTML = `
+                <div class="absolute left-[-5px] top-1.5 w-2.5 h-2.5 ${dotColor} rounded-full border-2 border-paper"></div>
+                <div class="text-[10px] text-gray-400 font-mono mb-0.5">${time} <span class="uppercase tracking-wider ml-1 opacity-70">${topic}</span></div>
+                <div class="text-sm ${textColor} leading-snug font-serif">${text}</div>
+            `;
+
+            logContainer.insertBefore(div, logContainer.firstChild);
+
+            if (logContainer.children.length > maxLogs) {
+                logContainer.lastChild.remove();
+            }
+        }
+
+        let fillsCount = 0;
+
+        function processMessage(msg) {
+            const { topic, payload } = msg;
+            // DEBUG: Log all incoming messages except frequent ones
+            if (topic === 'account') {
+                console.log("Account update received:", payload);
+            }
+            if (topic !== 'features' && topic !== 'oad' && topic !== 'vad' && topic !== 'stress') {
+                // console.log("Msg:", topic, payload);
+            }
+
+            // Market
+            if (topic === 'features') {
+                if (payload.mid) {
+                    els.price.innerText = parseFloat(payload.mid).toFixed(2);
+                    els.spread.innerText = parseFloat(payload.spread_bps).toFixed(2);
+                }
+            }
+
+            // Detectors
+            if (topic === 'oad') {
+                const z = Math.abs(payload.score || 0);
+                els.oadVal.innerText = z.toFixed(1);
+                els.oadBar.style.width = `${Math.min(z * 10, 100)}%`;
+
+                // Stress Logic
+                if (z > 4) {
+                    els.oadBar.className = 'h-full bg-cinnabar transition-all duration-300';
+                    els.oadVal.className = 'font-mono text-cinnabar font-bold';
+
+                    if (payload.triggers && payload.triggers.gap_flag > 0) {
+                        els.oadReason.innerText = "⚠️ LIQUIDITY GAP DETECTED";
+                        els.oadReason.classList.remove('hidden');
+                    } else {
+                        els.oadReason.innerText = "Spread/Impact Anomaly";
+                        els.oadReason.classList.remove('hidden');
+                    }
+                } else {
+                    els.oadBar.className = 'h-full bg-ink transition-all duration-300';
+                    els.oadVal.className = 'font-mono text-ink';
+                    els.oadReason.classList.add('hidden');
+                }
+            }
+            if (topic === 'vad') {
+                const z = Math.abs(payload.score || 0);
+                els.vadVal.innerText = z.toFixed(1);
+                els.vadBar.style.width = `${Math.min(z * 10, 100)}%`;
+                els.vadBar.className = z > 4 ? 'h-full bg-cinnabar transition-all duration-300' : 'h-full bg-ink transition-all duration-300';
+            }
+
+            // Stress
+            if (topic === 'stress') {
+                const score = parseFloat(payload.score || 0);
+                els.stressVal.innerText = score.toFixed(1);
+                els.stressBar.style.width = `${Math.min(score * 10, 100)}%`;
+
+                if (payload.level === 'DANGER' || payload.level === 'WARN') {
+                    els.stressBar.className = 'h-full bg-cinnabar transition-all duration-300';
+                    els.stressVal.className = 'font-mono text-cinnabar font-bold';
+                    els.stressWarn.classList.remove('hidden');
+
+                    // Update main node status
+                    document.getElementById('risk-status').innerText = "TOXIC";
+                    document.getElementById('risk-status').className = "text-[10px] text-cinnabar mt-1 font-mono font-bold";
+                } else {
+                    els.stressBar.className = 'h-full bg-bamboo transition-all duration-300';
+                    els.stressVal.className = 'font-mono text-bamboo';
+                    els.stressWarn.classList.add('hidden');
+
+                    document.getElementById('risk-status').innerText = "ACTIVE";
+                    document.getElementById('risk-status').className = "text-[10px] text-bamboo mt-1 font-mono";
+                }
+            }
+
+            // Regime
+            if (topic === 'regime') {
+                els.regime.innerText = `${payload.price_regime} / ${payload.flow_regime}`;
+
+                if (payload.flow_regime === 'TOXIC') {
+                    els.regime.className = 'text-xs font-bold text-cinnabar';
+                    els.regimeDetails.innerText = 'Defense Mode Engaged';
+                } else {
+                    els.regime.className = 'text-xs font-bold text-ink';
+                    els.regimeDetails.innerText = 'Standard Operation';
+                }
+            }
+
+            // Signal
+            if (topic === 'signal') {
+                if (payload && payload.strategy) {
+                    activateNode(els.signalNode, 'border-bamboo');
+                    log('SIGNAL', `Opportunity: ${payload.strategy} (${payload.side})`, 'warn');
+                }
+            }
+
+            // Risk
+            if (topic === 'risk') {
+                // els.riskStatus is now controlled by Stress updates for better responsiveness
+                if (payload.action === 'DENY') {
+                    // Filter out "NO_SIGNAL" to avoid spamming the log
+                    if (payload.reasons && payload.reasons.includes('NO_SIGNAL')) {
+                        return;
+                    }
+                    activateNode(els.riskNode, 'border-cinnabar', 'shadow-[0_0_20px_rgba(192,57,43,0.3)]');
+                    log('GUARDIAN', `Blocked: ${payload.reasons?.join(', ')}`, 'bad');
+                } else if (payload.action.includes('ALLOW')) {
+                    activateNode(els.riskNode, 'border-bamboo', 'shadow-[0_0_20px_rgba(45,106,79,0.3)]');
+                    log('GUARDIAN', `Approved ${payload.size_usd} USD allocation`, 'good');
+                }
+            }
+
+            if (topic === 'account') {
+                if (payload.balance !== undefined) {
+                    els.accountBalance.innerText = parseFloat(payload.balance).toFixed(2);
+
+                    // PnL calculation / display logic
+                    // If backend sends unrealized_pnl, use it. Otherwise calculate locally from positions
+                    // For now, adapter sends unrealized_pnl as 0.0 usually, but let's check
+                    let pnl = parseFloat(payload.unrealized_pnl || 0);
+
+                    // If we have active positions calculation from 'positions' topic, we could use that sum
+                    // but let's stick to what payload says for now or simple check
+
+                    els.accountPnl.innerText = (pnl > 0 ? "+" : "") + pnl.toFixed(2);
+                    els.accountPnl.className = pnl >= 0 ?
+                        (pnl > 0 ? 'text-xl font-mono text-bamboo font-bold' : 'text-xl font-mono text-gray-400') :
+                        'text-xl font-mono text-cinnabar font-bold';
+                }
+            }
+
+            if (topic === 'positions') {
+                const tbody = document.getElementById('positions-body');
+                tbody.innerHTML = '';
+
+                if (!payload || payload.length === 0) {
+                    tbody.innerHTML = '<tr class="text-gray-300 italic text-center"><td colspan="4" class="py-4">No active positions</td></tr>';
+                    // return; // Don't return, we might need to calc total PnL if not provided by account
+                }
+
+                const currentPrice = parseFloat(document.getElementById('market-price').innerText) || 0;
+                let totalUnrealizedPnl = 0;
+
+                payload.forEach(pos => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors';
+
+                    const sideClass = pos.side === 'long' ? 'text-bamboo' : 'text-cinnabar';
+                    const sideLabel = pos.side === 'long' ? 'LONG' : 'SHORT';
+
+                    // Simple PnL Calc
+                    let pnl = 0;
+                    if (currentPrice > 0) {
+                        if (pos.side === 'long') pnl = (currentPrice - pos.entry_price) * pos.size;
+                        else pnl = (pos.entry_price - currentPrice) * pos.size;
+                    }
+                    totalUnrealizedPnl += pnl;
+
+                    const pnlClass = pnl >= 0 ? 'text-bamboo' : 'text-cinnabar';
+
+                    tr.innerHTML = `
+                        <td class="py-2 ${sideClass} font-bold">${sideLabel}</td>
+                        <td class="py-2">${pos.size_usd.toFixed(0)}</td>
+                        <td class="py-2 text-gray-500">${pos.entry_price.toFixed(2)}</td>
+                        <td class="py-2 text-right ${pnlClass} font-bold">${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Optional: Update global PnL from positions aggregation if account doesn't send it
+                // els.accountPnl.innerText = (totalUnrealizedPnl > 0 ? "+" : "") + totalUnrealizedPnl.toFixed(2);
+                // els.accountPnl.className = totalUnrealizedPnl >= 0 ? 
+                //     (totalUnrealizedPnl > 0 ? 'text-xl font-mono text-bamboo font-bold' : 'text-xl font-mono text-gray-400') : 
+                //     'text-xl font-mono text-cinnabar font-bold';
+            }
+
+            // Exec
+            if (topic === 'fill') {
+                fillsCount++;
+                els.fills.innerText = fillsCount;
+                activateNode(els.execNode, 'border-ink');
+                log('EXECUTION', `Filled ${payload.side} ${payload.amount} @ ${payload.price}`, 'good');
+            }
+        }
+
+        function activateNode(node, borderColor, shadow = 'shadow-lg') {
+            const originalClasses = node.className;
+            node.className = `${originalClasses.replace('border-gray-200', '').replace('border-ink', '')} ${borderColor} ${shadow} scale-110`;
+
+            setTimeout(() => {
+                // Reset (simplified, assumes default state is mostly generic)
+                node.className = originalClasses;
+            }, 600);
+        }
+
+    </script>
+</body>
+
+</html>

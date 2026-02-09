@@ -1,0 +1,7 @@
+environment: test
+
+market:
+  tape_window_sec: 60
+
+logging:
+  level: WARNING
