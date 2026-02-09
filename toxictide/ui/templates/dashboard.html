@@ -366,7 +366,8 @@
         lucide.createIcons();
 
         // --- WebSocket ---
-        const wsUrl = `ws://${window.location.host}/ws`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
         let ws;
         const logContainer = document.getElementById('log-container');
         const maxLogs = 50;
