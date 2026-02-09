@@ -165,7 +165,7 @@ def main():
     # 启动 WebUI
     try:
         from toxictide.ui.web import WebUIv2
-        port = int(os.getenv("WEB_UI_PORT", 8000))
+        port = int(os.getenv("WEB_UI_PORT", 8001))
         web_ui = WebUIv2(port=port)
         web_ui.start()
         print(f"✅ Web Dashboard已启动: http://localhost:{port}")
