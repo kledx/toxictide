@@ -23,6 +23,7 @@ services:
       - BINANCE_SYMBOL=${BINANCE_SYMBOL:-ETHUSDT}
       - BINANCE_USE_TESTNET=${BINANCE_USE_TESTNET:-false}
       - WEB_UI_PORT=${WEB_UI_PORT:-8001}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
       # Secrets (No default value, passed from Dokploy)
       - BINANCE_API_KEY

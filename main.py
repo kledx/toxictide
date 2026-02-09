@@ -22,6 +22,35 @@ from toxictide.market.collector_real import BinanceMarketCollectorSync
 from toxictide.config_loader import load_config, get_config_dict
 from toxictide.app import Orchestrator
 from toxictide.ui.cli import CLI
+import structlog
+import logging
+
+def configure_logging():
+    """配置日志系统"""
+    log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_level = getattr(logging, log_level_str, logging.INFO)
+
+    # 配置标准 logging
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=log_level,
+    )
+
+    # 配置 structlog
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,  # 过滤日志级别
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+
+configure_logging()
 
 
 def main():
