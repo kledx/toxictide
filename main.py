@@ -110,27 +110,11 @@ def main():
     symbol = os.getenv("BINANCE_SYMBOL", "ETHUSDT")
 
     collector = BinanceMarketCollectorSync(symbol=symbol, testnet=use_testnet)
-    try:
-        # 尝试启动（增加超时提示）
-        import threading
-        # 这是一个简单的检查：如果在 15 秒内未连接成功，打印警告
-        # 注意：BinanceMarketCollectorSync.start() 内部是同步阻塞等待连接的
-        # 为了不完全卡死，我们还是得让它跑，但我们可以捕获 KeyboardInterrupt
-        collector.start()
-        
-    except KeyboardInterrupt:
-        print("\n❌ 用户取消启动")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ 启动异常: {e}")
-        sys.exit(1)
+    collector.start()
 
     if not collector.is_connected():
         print(f"❌ 无法连接到 {network_name}")
-        print("   可能原因：")
-        print("   1. 网络连接不稳定")
-        print("   2. 所在地区屏蔽了 Binance API (需要代理)")
-        print("   3. Docker 容器 DNS 配置问题")
+        print("   请检查网络连接")
         sys.exit(1)
 
     print(f"✅ 已连接到 {network_name} - {symbol}")
