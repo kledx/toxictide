@@ -10,6 +10,8 @@ import sys
 import time
 from pathlib import Path
 from dotenv import load_dotenv
+import structlog
+import logging
 
 # 加载环境变量
 load_dotenv()
@@ -17,13 +19,6 @@ load_dotenv()
 # 添加项目路径
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
-
-from toxictide.market.collector_real import BinanceMarketCollectorSync
-from toxictide.config_loader import load_config, get_config_dict
-from toxictide.app import Orchestrator
-from toxictide.ui.cli import CLI
-import structlog
-import logging
 
 def configure_logging():
     """配置日志系统"""
@@ -50,7 +45,13 @@ def configure_logging():
         cache_logger_on_first_use=True,
     )
 
+# 尽早配置日志，确保在其他模块导入前生效
 configure_logging()
+
+from toxictide.market.collector_real import BinanceMarketCollectorSync
+from toxictide.config_loader import load_config, get_config_dict
+from toxictide.app import Orchestrator
+from toxictide.ui.cli import CLI
 
 
 def main():
