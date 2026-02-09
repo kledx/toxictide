@@ -10,8 +10,8 @@ services:
     volumes:
       # Persist Logs
       - ./logs:/app/logs
-      # Persist Paper Account State
-      - ./paper_account.json:/app/paper_account.json
+      # Persist Data (including paper account state)
+      - ./data:/app/data
       # Mount .env if you want to manage it as a file on host, 
       # OR rely on Dokploy env var injection (recommended).
       # If using Dokploy, env vars are usually injected directly.

@@ -58,7 +58,13 @@ class PaperExecutionAdapter:
             initial_balance=initial_balance,
         )
 
-        self._state_file = "paper_account.json"
+        # 状态持久化文件路径
+        # 优先使用 data/ 目录（用于 Docker 挂载持久化），否则使用当前目录
+        if os.path.exists("data") and os.path.isdir("data"):
+            self._state_file = "data/paper_account.json"
+        else:
+            self._state_file = "paper_account.json"
+
         try:
             self._load_state()
         except Exception as e:
@@ -260,6 +266,11 @@ class PaperExecutionAdapter:
             "position_entry_price": self._position_entry_price,
             "updated_at": time.time(),
         }
+        # 确保目录存在
+        dir_name = os.path.dirname(self._state_file)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+
         with open(self._state_file, "w") as f:
             json.dump(data, f, indent=2)
 
