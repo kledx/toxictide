@@ -30,5 +30,3 @@ services:
       - BINANCE_API_SECRET
       - BINANCE_TESTNET_API_KEY
       - BINANCE_TESTNET_API_SECRET
-
-    network_mode: bridge
