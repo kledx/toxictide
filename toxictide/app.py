@@ -154,6 +154,11 @@ class Orchestrator:
 
             # 根据是否有真实数据采集器选择数据源
             if self._real_collector:
+                # 检查采集器连接状态
+                if not self._real_collector.is_connected():
+                    logger.warning("real_collector_disconnected", symbol=self._real_collector._collector.symbol)
+                    return
+
                 # 使用真实数据
                 book_state = self._real_collector.get_orderbook_snapshot()
                 if not book_state:
@@ -162,6 +167,10 @@ class Orchestrator:
 
                 # 获取最近的交易数据
                 recent_trades = self._real_collector.get_recent_trades(max_count=100)
+                if not recent_trades:
+                     # 允许暂时无成交，但记录警告
+                     logger.debug("no_trade_data_from_real_collector")
+                
                 for trade in recent_trades:
                     self._tape.add(trade)
             else:

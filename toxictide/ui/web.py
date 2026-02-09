@@ -162,6 +162,10 @@ class WebUIv2:
             except FileNotFoundError:
                 return HTMLResponse(content="<h1>Dashboard HTML not found</h1>")
 
+        @self.app.get("/health")
+        async def health():
+            return {"status": "ok", "ts": time.time()}
+
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             await self.manager.connect(websocket)
