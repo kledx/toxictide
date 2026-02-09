@@ -14,24 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY pyproject.toml .
-# Create a dummy README.md if it doesn't exist, as it might be required by pyproject.toml
-# Or just copy the project first. Let's copy requirements logic.
-# Since we use pyproject.toml, we can pip install . or export requirements.
-# Let's try pip install . (requires the whole source code context usually, or at least structure)
-
-# Strategy: Copy pyproject.toml and install dependencies first for caching
-# We'll generate a requirements.txt from pyproject.toml using a simple python one-liner or just use pip install
-# if we copy the project structure.
-# Let's upgrade pip first
-RUN pip install --upgrade pip
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY . .
 
-# Install the package in editable mode or just install dependencies
-# Installing in editable mode allows running directly
-RUN pip install -e .
+# Install the package
+RUN pip install .
 
 # Expose port
 EXPOSE 8001
